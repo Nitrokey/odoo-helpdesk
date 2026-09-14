@@ -63,6 +63,7 @@ class TestHelpdeskFetchmail(TestHelpdeskTicketBase):
         ticket_number = self.env["helpdesk.ticket"].browse(res_id).number
         self.assertEqual(ticket_number[:2], "HT")
         self.assertGreater(res_id, 0)
+        return res_id
 
     def test_message_process(self):
         # keep a list of existing tickets
@@ -98,8 +99,12 @@ class TestHelpdeskFetchmail(TestHelpdeskTicketBase):
         self._dummy_fetchmail_process(email_from=email_from)
         # get the newly created ticket
         ticket = self.env["helpdesk.ticket"].search([]) - ticket_ids
-        self.assertFalse(ticket.partner_id)
         self.assertEqual(ticket.partner_email, email_from)
+        # a partner has been created and linked
+        self.assertTrue(ticket.partner_id)
+        self.assertEqual(ticket.partner_id.email, email_from)
+        # the customer is subscribed as a follower
+        self.assertIn(ticket.partner_id, ticket.message_partner_ids)
 
     def test_message_process_known_sender(self):
         email_from = "known-sender@example.com"
